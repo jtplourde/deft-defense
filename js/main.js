@@ -7,6 +7,16 @@
   const status = document.querySelector("#form-status");
   const navLinks = document.querySelectorAll('#site-nav a[href^="#"]');
 
+  const INTEREST_LABELS = {
+    assessment: "Vulnerability assessment",
+    hardening: "Hardening recommendations",
+    remediation: "Remediation guidance",
+    "not-sure": "Not sure yet — let's talk",
+  };
+
+  // Keep mailto: URLs under common client/browser limits.
+  const MAX_MAILTO_LENGTH = 1800;
+
   if (year) {
     year.textContent = String(new Date().getFullYear());
   }
@@ -76,6 +86,12 @@
       event.preventDefault();
       status.classList.remove("is-success", "is-error");
 
+      // Honeypot: abort silently if filled (likely a bot).
+      const honeypot = form.querySelector("#website");
+      if (honeypot && honeypot.value.trim() !== "") {
+        return;
+      }
+
       const name = form.querySelector("#name");
       const email = form.querySelector("#email");
       const company = form.querySelector("#company");
@@ -99,8 +115,15 @@
         return;
       }
 
-      const interestLabel =
-        interest?.selectedOptions?.[0]?.text || interest?.value || "Assessment";
+      const interestKey = interest?.value || "";
+      if (!Object.prototype.hasOwnProperty.call(INTEREST_LABELS, interestKey)) {
+        status.textContent = "Please choose a valid interest option.";
+        status.classList.add("is-error");
+        interest?.focus();
+        return;
+      }
+      const interestLabel = INTEREST_LABELS[interestKey];
+
       const companyVal = company?.value.trim() || "Not specified";
       const messageVal = message?.value.trim() || "No additional details";
 
@@ -117,11 +140,20 @@
         ].join("\n")
       );
 
+      const mailto = `mailto:hello@deftdefense.com?subject=${subject}&body=${body}`;
+      if (mailto.length > MAX_MAILTO_LENGTH) {
+        status.textContent =
+          "Your message is too long to open in an email client. Please shorten it, or email hello@deftdefense.com directly.";
+        status.classList.add("is-error");
+        message?.focus();
+        return;
+      }
+
       status.textContent =
         "Opening your email client… If nothing opens, write us at hello@deftdefense.com.";
       status.classList.add("is-success");
 
-      window.location.href = `mailto:hello@deftdefense.com?subject=${subject}&body=${body}`;
+      window.location.href = mailto;
     });
   }
 })();

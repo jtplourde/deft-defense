@@ -601,6 +601,17 @@ a:hover {
   font-size: 0.95rem;
 }
 
+
+/* Honeypot — visually hidden; leave in tab order off via tabindex=-1 */
+.hp {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .contact-form {
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
